@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Partajare locație – demo universitar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+    }
+    button {
+      font-size: 18px;
+      padding: 12px 20px;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Partajare locație</h2>
+  <p>
+    Prin apăsarea butonului de mai jos, îți vei partaja locația GPS
+    în scop educațional (demo universitar).
+  </p>
+
+  <button onclick="getLocation()">Accept și partajez locația</button>
+
+  <div id="result"></div>
+
+  <script>
+    function getLocation() {
+      if (!navigator.geolocation) {
+        document.getElementById("result").innerText =
+          "Geolocația nu este suportată de acest browser.";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          document.getElementById("result").innerHTML =
+            "📍 Locație obținută:<br>" +
+            "Latitudine: " + lat + "<br>" +
+            "Longitudine: " + lon;
+        },
+        function(error) {
+          document.getElementById("result").innerText =
+            "Accesul la locație a fost refuzat.";
+        }
+      );
+    }
+  </script>
+
+</body>
+</html>
