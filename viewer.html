@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <title>Panou Control - Locații</title>
     <style>
-        .vizita { border: 1px solid #000; margin: 10px; padding: 10px; font-family: sans-serif; }
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+        .vizita { 
+            background: white; border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 15px; padding: 15px; border-left: 5px solid #007bff;
+        }
+        .maps-link { display: inline-block; margin-top: 10px; color: #007bff; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>Vizitatori înregistrați:</h1>
-    <div id="lista">Așteptare date din Firebase...</div>
+    <h1>📍 Vizitatori înregistrați în Firebase</h1>
+    <div id="lista">Se încarcă datele...</div>
 
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
     <script>
+        // Configurația TA exactă
         const firebaseConfig = {
             apiKey: "AIzaSyCJxFox3puC2aDapW9peyPgOLhIVMyzI4c",
             authDomain: "location-demo-64338.firebaseapp.com",
@@ -28,30 +35,33 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Ascultă în timp real când apar date noi
+        // ASCULTĂM TABELUL 'vizite' (cel în care trimite index.html)
         database.ref('vizite').on('value', (snapshot) => {
             const data = snapshot.val();
             const container = document.getElementById("lista");
             container.innerHTML = ""; 
 
             if(!data) {
-                container.innerText = "Nicio vizită înregistrată încă.";
+                container.innerText = "Momentan nu există vizite în baza de date.";
                 return;
             }
 
-            for (let id in data) {
-                let v = data[id];
-                let item = `
-                    <div class="vizita">
-                        <b>Data:</b> ${v.timp} <br>
-                        <b>IP:</b> ${v.ip} <br>
-                        <b>Locație:</b> ${v.oras}, ${v.tara} <br>
-                        <b>Coordonate:</b> ${v.lat}, ${v.lon} <br>
-                        <a href="https://www.google.com/maps?q=${v.lat},${v.lon}" target="_blank">Vezi pe Google Maps</a>
-                    </div>
+            // Convertim obiectul în listă și o inversăm (cele mai noi sus)
+            const entries = Object.entries(data).reverse();
+
+            entries.forEach(([id, v]) => {
+                const item = document.createElement('div');
+                item.className = 'vizita';
+                item.innerHTML = `
+                    <b>🕒 Data:</b> ${v.data || v.timp} <br>
+                    <b>🌐 IP:</b> ${v.ip} <br>
+                    <b>📍 Oraș:</b> ${v.oras}, ${v.tara} <br>
+                    <b>📡 Coordonate:</b> ${v.lat}, ${v.lon} <br>
+                    <b>🏢 Furnizor:</b> ${v.furnizor || 'N/A'} <br>
+                    <a class="maps-link" href="https://www.google.com/maps?q=${v.lat},${v.lon}" target="_blank">🗺️ Deschide în Google Maps</a>
                 `;
-                container.innerHTML = item + container.innerHTML; // Cele mai noi apar sus
-            }
+                container.appendChild(item);
+            });
         });
     </script>
 </body>
