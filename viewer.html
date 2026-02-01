@@ -1,39 +1,58 @@
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Panou Control - Locații</title>
+    <style>
+        .vizita { border: 1px solid #000; margin: 10px; padding: 10px; font-family: sans-serif; }
+    </style>
+</head>
+<body>
+    <h1>Vizitatori înregistrați:</h1>
+    <div id="lista">Așteptare date din Firebase...</div>
 
-<script>
-  // ACEEAȘI CONFIGURAȚIE CA MAI SUS
-  const firebaseConfig = {
-  apiKey: "AIzaSyCJxFox3puC2aDapW9peyPgOLhIVMyzI4c",
-  authDomain: "location-demo-64338.firebaseapp.com",
-  databaseURL: "https://location-demo-64338-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "location-demo-64338",
-  storageBucket: "location-demo-64338.firebasestorage.app",
-  messagingSenderId: "884756282803",
-  appId: "1:884756282803:web:8724805c2c32d3273b5fc6",
-  measurementId: "G-ZNEXFC2EBB"
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
-  firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJxFox3puC2aDapW9peyPgOLhIVMyzI4c",
+            authDomain: "location-demo-64338.firebaseapp.com",
+            databaseURL: "https://location-demo-64338-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "location-demo-64338",
+            storageBucket: "location-demo-64338.firebasestorage.app",
+            messagingSenderId: "884756282803",
+            appId: "1:884756282803:web:8724805c2c32d3273b5fc6"
+        };
 
-  // Citim datele din tabelul 'vizitatori'
-  database.ref('vizitatori').on('value', (snapshot) => {
-    const data = snapshot.val();
-    const container = document.getElementById("lista-locatii");
-    container.innerHTML = ""; // Resetăm lista
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-    for (let id in data) {
-      let vizitator = data[id];
-      container.innerHTML += `
-        <div style="border-bottom: 1px solid #ccc; padding: 10px;">
-          <b>Data:</b> ${vizitator.data_acces} <br>
-          <b>Oraș:</b> ${vizitator.oras} (${vizitator.ip}) <br>
-          <b>Coordonate:</b> ${vizitator.lat}, ${vizitator.lon} <br>
-          <a href="https://www.google.com/maps?q=${vizitator.lat},${vizitator.lon}" target="_blank">Vezi pe Hartă</a>
-        </div>
-      `;
-    }
-  });
-</script>
+        // Ascultă în timp real când apar date noi
+        database.ref('vizite').on('value', (snapshot) => {
+            const data = snapshot.val();
+            const container = document.getElementById("lista");
+            container.innerHTML = ""; 
 
-<div id="lista-locatii">Așteptare date...</div>
+            if(!data) {
+                container.innerText = "Nicio vizită înregistrată încă.";
+                return;
+            }
+
+            for (let id in data) {
+                let v = data[id];
+                let item = `
+                    <div class="vizita">
+                        <b>Data:</b> ${v.timp} <br>
+                        <b>IP:</b> ${v.ip} <br>
+                        <b>Locație:</b> ${v.oras}, ${v.tara} <br>
+                        <b>Coordonate:</b> ${v.lat}, ${v.lon} <br>
+                        <a href="https://www.google.com/maps?q=${v.lat},${v.lon}" target="_blank">Vezi pe Google Maps</a>
+                    </div>
+                `;
+                container.innerHTML = item + container.innerHTML; // Cele mai noi apar sus
+            }
+        });
+    </script>
+</body>
+</html>
