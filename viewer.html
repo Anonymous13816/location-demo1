@@ -14,7 +14,26 @@
     </style>
 </head>
 <body>
-    <h1>📍 Vizitatori înregistrați în Firebase</h1>
+    <h1>📍 Vizitatori înregistrați în Firebase</h1
+     <div style="margin: 20px;">
+    <button onclick="stergeTot()" style="background: #ff4444; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+        🗑️ Șterge tot istoricul
+    </button>
+</div>
+
+<script>
+// Funcția de ștergere (adaugă-o în secțiunea de <script> existentă)
+function stergeTot() {
+    if(confirm("Ești sigur că vrei să golești toată baza de date?")) {
+        database.ref('vizite').remove()
+            .then(() => {
+                alert("Toate datele au fost șterse!");
+                location.reload(); // Reîncarcă pagina ca să se curețe lista
+            })
+            .catch(err => alert("Eroare la ștergere: " + err));
+    }
+}
+</script>                                            
     <div id="lista">Se încarcă datele...</div>
 
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
